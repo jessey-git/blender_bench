@@ -80,6 +80,7 @@ Command: `blender_bench.exe --benchmark_report_aggregates_only=true --benchmark_
 The *_internalsse variations above should not be any faster/slower than the *_lf3sf3 variants.  However, this is not the case; they are substantially faster in some cases.
 
 Pro: This would allow for quick integration back into the main Blender codebase as all the callers would not notice. The functions would just get faster; for "free".
+
 Con: The exact cause for this performance increase is unknown...
 
 ### Is SSE or optimization at this level worth it?
@@ -142,18 +143,23 @@ Linux:
 ```
 
 ### Run
+Help
 ```Shell
 blender_bench.exe --help
-
+```
 For quick spot checks:
+```Shell
 blender_bench.exe --benchmark_repetitions=5 --benchmark_filter=normal_tri
-
+```
 For reporting and better averages:
+```Shell
 blender_bench.exe --benchmark_report_aggregates_only=true --benchmark_repetitions=10
 ```
 
 ### Test
-TODO: Add tests
+```Shell
+ctest --output-on-failure -C Release
+```
 
 ## Supported Compilers
 * Microsoft Visual C++ 2019 (and likely earlier)
