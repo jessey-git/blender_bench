@@ -93,3 +93,42 @@ float normal_tri_v3_sse(xmmvecf *n, const xmmvecf v1, const xmmvecf v2, const xm
 
   return normalize_v3_sse(n);
 }
+
+int is_quad_flip_v3_first_third_fast(const float v1[3],
+                                     const float v2[3],
+                                     const float v3[3],
+                                     const float v4[3])
+{
+  float d_12[3], d_13[3], d_14[3];
+  float cross_a[3], cross_b[3];
+  sub_v3_v3v3(d_12, v2, v1);
+  sub_v3_v3v3(d_13, v3, v1);
+  sub_v3_v3v3(d_14, v4, v1);
+  cross_v3_v3v3(cross_a, d_12, d_13);
+  cross_v3_v3v3(cross_b, d_14, d_13);
+  return dot_v3v3(cross_a, cross_b) > 0.0f;
+}
+
+int is_quad_flip_v3_first_third_fast_internalsse(const float v1[3],
+                                                 const float v2[3],
+                                                 const float v3[3],
+                                                 const float v4[3])
+{
+  return is_quad_flip_v3_first_third_fast_sse(
+      load_xmmvecf_f3(v1), load_xmmvecf_f3(v2), load_xmmvecf_f3(v3), load_xmmvecf_f3(v4));
+}
+
+int is_quad_flip_v3_first_third_fast_sse(const xmmvecf v1,
+                                         const xmmvecf v2,
+                                         const xmmvecf v3,
+                                         const xmmvecf v4)
+{
+  xmmvecf d_12, d_13, d_14;
+  xmmvecf cross_a, cross_b;
+  sub_v3_v3v3_sse(&d_12, v2, v1);
+  sub_v3_v3v3_sse(&d_13, v3, v1);
+  sub_v3_v3v3_sse(&d_14, v4, v1);
+  cross_v3_v3v3_sse(&cross_a, d_12, d_13);
+  cross_v3_v3v3_sse(&cross_b, d_14, d_13);
+  return dot_v3v3_sse(cross_a, cross_b) > 0.0f;
+}

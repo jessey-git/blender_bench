@@ -34,6 +34,18 @@ float normal_tri_v3(float r[3], const float a[3], const float b[3], const float 
 float normal_tri_v3_internalsse(float r[3], const float a[3], const float b[3], const float c[3]);
 float normal_tri_v3_sse(xmmvecf *n, const xmmvecf v1, const xmmvecf v2, const xmmvecf v3);
 
+int is_quad_flip_v3_first_third_fast(const float v1[3],
+                                     const float v2[3],
+                                     const float v3[3],
+                                     const float v4[3]);
+int is_quad_flip_v3_first_third_fast_internalsse(const float v1[3],
+                                                 const float v2[3],
+                                                 const float v3[3],
+                                                 const float v4[3]);
+int is_quad_flip_v3_first_third_fast_sse(const xmmvecf v1,
+                                         const xmmvecf v2,
+                                         const xmmvecf v3,
+                                         const xmmvecf v4);
 #ifdef __cplusplus
 }
 #endif
