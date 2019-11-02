@@ -26,6 +26,8 @@ The following scenarios were profiled to determine which math-heavy code paths w
  * Go to edit mode, use vertex select, and select 8k faces worth of vertices
  * Profile: Hit G and attempt to move the selected vertices around
 
+Interesting code paths found: `split_loop_nor_fan_do`, `mesh_calc_normals_poly_prepare_cb`, `mesh_verts_calc_normals_accum_cb`, `mesh_edges_calc_vectors_cb`, `mesh_edges_sharp_tag`, `extract_lnor_loop_mesh`, and `extract_pos_nor_loop_mesh` 
+
 ## Notes
 
 ### Mimicking Blender
