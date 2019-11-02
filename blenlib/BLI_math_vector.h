@@ -109,6 +109,8 @@ MINLINE void mul_v3_v3fl(float r[3], const float a[3], float f);
 
 MINLINE float dot_v3v3(const float a[3], const float b[3]);
 
+MINLINE void cross_v3_v3v3(float r[3], const float a[3], const float b[3]);
+
 MINLINE float normalize_v3_v3_length(float r[3], const float a[3], const float unit_length);
 MINLINE float normalize_v3_v3(float r[3], const float a[3]);
 MINLINE float normalize_v3(float n[3]);

@@ -11,8 +11,9 @@ if(MSVC)
 endif()
 
 set(SRC
-	"bench_math.cpp"
 	"bench_cross_tri.cpp"
+	"bench_is_quad_flip.cpp"
+	"bench_math.cpp"
 	"bench_normal_tri.cpp"
 	"bench_quantize.cpp"
 )
