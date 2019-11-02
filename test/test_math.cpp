@@ -12,7 +12,7 @@
 
 int TestInt(int a, int b)
 {
-  if (abs(a-b) > 1) {
+  if (abs(a - b) > 1) {
     printf("  Fail: %d vs %d\n", a, b);
     return 1;
   }
@@ -62,6 +62,27 @@ int TestNormalTri()
   return failures;
 }
 
+int TestIsQuadFlip()
+{
+  printf("TestIsQuadFlip\n");
+  const float(*verts)[3] = geo_quadsphere1_f3_verts;
+  const int(*tris)[3] = geo_quadspehere1_indices;
+
+  int failures = 0;
+  for (int i = 0; i < geo_quadsphehere1_numtris; i += 2) {
+    int r_baseline = is_quad_flip_v3_first_third_fast(
+        verts[tris[i][0]], verts[tris[i][1]], verts[tris[i][2]], verts[tris[i + 1][2]]);
+
+    int r_test = is_quad_flip_v3_first_third_fast_internalsse(
+        verts[tris[i][0]], verts[tris[i][1]], verts[tris[i][2]], verts[tris[i + 1][2]]);
+
+    printf("Testing quad flip %d\n", i);
+    failures += TestInt(r_baseline, r_test);
+  }
+
+  return failures;
+}
+
 int TestQuantize()
 {
   printf("TestQuantize\n");
@@ -99,6 +120,7 @@ int main()
   int failures = 0;
 
   failures += TestNormalTri();
+  failures += TestIsQuadFlip();
   failures += TestQuantize();
 
   return failures;
