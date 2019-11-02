@@ -5,21 +5,21 @@ A playground/benchmarking program for testing out alternative implementations of
 ## Motivating Scenarios
 The following scenarios were profiled to determine which math-heavy code paths within Blender could be improved. From those code paths, select mathematical functions were tested out.
 
-### [1] Modeling with modifiers / procedural non-destructive workflows
+### Modeling with modifiers / procedural non-destructive workflows
 * Open blender as follows (keeps drawing overhead low): `blender --window-geometry 0 0 960 540`
 * Download the [blenderman](https://cloud.blender.org/p/gallery/57e5084f0fcf294119c5055c) demo file
 * Open the downloaded `blenderman.blend` with `Load UI` _unchecked_
 * Switch to camera view (NUMPAD-0)
 * Profile: Hit play on the timeline
 
-### [2] Heavy array modifier usage
+### Heavy array modifier usage
  * Open blender as follows (keeps drawing overhead low): `blender --window-geometry 0 0 960 540`
  * Create a Suzanne monkey
  * Array the monkey 40 times in X, 40 times in Y (1600 total)
  * Animate the monkey position
  * Profile: Hit play on the timeline
 
-### [3] Transformation of vertices while in edit mode
+### Transformation of vertices while in edit mode
 * Open blender as follows (keeps drawing overhead low): `blender --window-geometry 0 0 960 540`
  * Create a UV Sphere with 12 segments, 6 rings
  * Apply 7 levels of subdivision
@@ -35,11 +35,9 @@ The following scenarios were profiled to determine which math-heavy code paths w
 * For now, naming conventions for APIs like sub_v3_v3v3(...) is kept even though the SSE variant of this API may now be working with a SSE type (effectively 4 floats).
 
 ### SSE Details
-* Passing the SSE types, like `__m128`, by reference does not seem to be necessary in the function signatures.  No speedup was observed when doing so.
-  * TODO: Validate if this is also true in Debug builds
+* Passing the SSE types, like `__m128`, by reference does not seem to be necessary in the function signatures.  No speedup was observed when doing so.  Even the intrinsic functions themselves take their parameters as a value types.
 
 * Usage of the [__vectorcall](https://docs.microsoft.com/en-us/cpp/cpp/vectorcall?view=vs-2019) calling convention does not seem to be required for optimal performance.
-  * TODO: Validate if this is true for inlined vs. not functions too
 
 * The focus is on SSE2.  Known downsides include:
   * Dot products are slower than necessary (requires SSE4 for better performance)
@@ -76,11 +74,11 @@ Command: `blender_bench.exe --benchmark_report_aggregates_only=true --benchmark_
 | BB_normal_tri_v3_sse_lf4sf4_mean | 237 ns (1.72x) | 271 ns (1.78x) | Good |
 | BB_normal_tri_v3_sse_lxmmsxmm_mean | 227 ns (1.80x) | 254 ns (1.9x) | Best |
 | | | | |
-| BB_is_quad_flip_v3_mean | 000 ns (1.11x) | 200 ns (1x) | Baseline |
-| BB_is_quad_flip_v3_internalsse_mean | 000 ns (1.11x) | 153 ns (1.31x) | Good |
-| BB_is_quad_flip_v3_sse_lf3_mean | 000 ns (1.11x) | 163 ns (1.23x) | Good |
-| BB_is_quad_flip_v3_sse_lf4_mean | 000 ns (1.11x) | 146 ns (1.37x) | Good |
-| BB_is_quad_flip_v3_sse_lxmm_mean | 000 ns (1.11x) | 144 ns (1.39x) | Best |
+| BB_is_quad_flip_v3_mean | 155 ns (1x) | 200 ns (1x) | Baseline |
+| BB_is_quad_flip_v3_internalsse_mean | 128 ns (1.21x) | 153 ns (1.31x) | Good |
+| BB_is_quad_flip_v3_sse_lf3_mean | 136 ns (1.14x) | 163 ns (1.23x) | Good |
+| BB_is_quad_flip_v3_sse_lf4_mean | 117 ns (1.32x) | 146 ns (1.37x) | Good |
+| BB_is_quad_flip_v3_sse_lxmm_mean | 116 ns (1.34x) | 144 ns (1.39x) | Best |
 | | | | |
 | BB_GPU_normal_convert_i10_v3_mean | 142 ns (1x) | 158 ns (1x) | Baseline |
 | BB_GPU_normal_convert_i10_v3_sse_lf3_mean | 141 ns (1.01x) | 142 ns (1.11x) | Ok |
@@ -92,9 +90,7 @@ Command: `blender_bench.exe --benchmark_report_aggregates_only=true --benchmark_
 ### Odd results
 The *_internalsse variations above should not be any faster/slower than the *_lf3sf3 variants.  However, this is not the case; they are substantially faster in some cases.
 
-Pro: This would allow for quick integration back into the main Blender codebase as all the callers would not notice. The functions would just get faster; for "free".
-
-Con: The exact cause for this performance increase is unknown...
+This would allow for quick integration back into the main Blender codebase as all the callers would not notice. The functions would just get faster; for "free".
 
 ### Is SSE or optimization at this level worth it?
 Speedups of any magnitude are worthwhile if:
@@ -121,7 +117,7 @@ Unfortunately, even after addressing the points above, there's the downside of u
 
 TODO: Figure out what changes are allowed in DNA and explore ways of testing a better format out in isolated cases.
 * Could just the `CD_NORMAL` layer be changed as an experiment?
-* Could we make a `CD_NORMAL_SSE` layer and enlighten a few critical code paths to see if performance can be gained?
+* Could a `CD_NORMAL_SSE` layer be created and enlighten a few critical code paths to see if performance can be gained?
 
 
 ## Building and Usage
