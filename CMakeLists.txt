@@ -1,12 +1,12 @@
-﻿cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.8)
 project(blender_bench VERSION 1.0.0)
 
 include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/blenlib)
 
 if(MSVC)
 	# Note: More performance can be gained by using these settings:
-	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Oi /GL /Gy")
-	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Oi /GL /Gy")
+	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GL")
+	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GL")
 	#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG:incremental")
 endif()
 
