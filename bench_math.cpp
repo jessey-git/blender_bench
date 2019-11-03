@@ -28,6 +28,26 @@ static void BB_dot_v3v3(benchmark::State &state)
 }
 
 //
+// Variant: dot_v3v3: implemented in terms of dot_v3v3_sse
+//
+static void BB_dot_v3v3_internalsse(benchmark::State &state)
+{
+  const float(*verts)[3] = geo_quadsphere1_f3_verts;
+  const int(*tris)[3] = geo_quadspehere1_indices;
+
+  for (auto _ : state) {
+    for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
+      float d;
+
+      d = dot_v3v3_internalsse(verts[tris[i][0]], verts[tris[i][1]]);
+      d += dot_v3v3_internalsse(verts[tris[i][1]], verts[tris[i][2]]);
+
+      benchmark::DoNotOptimize(d);
+    }
+  }
+}
+
+//
 // SSE Variant: dot_v3v3 sse: load from f3
 //
 static void BB_dot_v3v3_sse_lf3(benchmark::State &state)
@@ -95,6 +115,7 @@ static void BB_dot_v3v3_sse_lxmm(benchmark::State &state)
 }
 
 BENCHMARK(BB_dot_v3v3);
+BENCHMARK(BB_dot_v3v3_internalsse);
 BENCHMARK(BB_dot_v3v3_sse_lf3);
 BENCHMARK(BB_dot_v3v3_sse_lf4);
 BENCHMARK(BB_dot_v3v3_sse_lxmm);

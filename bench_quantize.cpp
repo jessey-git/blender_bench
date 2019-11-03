@@ -38,6 +38,35 @@ static void BB_GPU_normal_convert_i10_v3(benchmark::State &state)
 }
 
 //
+// Variant: GPU_normal_convert_i10_v3: implemented in terms of GPU_normal_convert_i10_v3_sse
+//
+static void BB_GPU_normal_convert_i10_v3_internalsse(benchmark::State &state)
+{
+  const float(*verts)[3] = geo_quadsphere1_f3_verts;
+  const int(*tris)[3] = geo_quadspehere1_indices;
+
+  // Setup
+  float normals[48][3];
+  for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
+    xmmvecf n;
+    normal_tri_v3_sse(&n,
+                      load_xmmvecf_f3(verts[tris[i][0]]),
+                      load_xmmvecf_f3(verts[tris[i][1]]),
+                      load_xmmvecf_f3(verts[tris[i][2]]));
+
+    store_f3_xmmvecf(normals[i], n);
+  }
+
+  // Benchmark
+  for (auto _ : state) {
+    for (int i = 0; i < 48; i++) {
+      GPUPackedNormal pn = GPU_normal_convert_i10_v3_internalsse(normals[i]);
+      benchmark::DoNotOptimize(pn);
+    }
+  }
+}
+
+//
 //  SSE Variant: GPU_normal_convert_i10_v3 see: load from f3
 //
 static void BB_GPU_normal_convert_i10_v3_sse_lf3(benchmark::State &state)
@@ -123,6 +152,7 @@ static void BB_GPU_normal_convert_i10_v3_sse_lxmm(benchmark::State &state)
 
 
 BENCHMARK(BB_GPU_normal_convert_i10_v3);
+BENCHMARK(BB_GPU_normal_convert_i10_v3_internalsse);
 BENCHMARK(BB_GPU_normal_convert_i10_v3_sse_lf3);
 BENCHMARK(BB_GPU_normal_convert_i10_v3_sse_lf4);
 BENCHMARK(BB_GPU_normal_convert_i10_v3_sse_lxmm);
