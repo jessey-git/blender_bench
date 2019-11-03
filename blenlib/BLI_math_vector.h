@@ -93,6 +93,8 @@ MINLINE float normalize_v3_v3_sse(xmmvecf *r, const xmmvecf a);
 MINLINE float normalize_v3_sse(xmmvecf *n);
 MINLINE void normal_short_to_float_v3_sse(xmmvecf *out, const short in[3]);
 
+MINLINE float dot_v3v3_internalsse(const float a[3], const float b[3]);
+
 /* -------------------------------------- */
 
 MINLINE void copy_v2_v2(float r[2], const float a[2]);

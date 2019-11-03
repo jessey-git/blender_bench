@@ -186,6 +186,11 @@ MINLINE float dot_v3v3(const float a[3], const float b[3])
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
+MINLINE float dot_v3v3_internalsse(const float a[3], const float b[3])
+{
+  return dot_v3v3_sse(load_xmmvecf_f3(a), load_xmmvecf_f3(b));
+}
+
 MINLINE void cross_v3_v3v3(float r[3], const float a[3], const float b[3])
 {
   r[0] = a[1] * b[2] - a[2] * b[1];

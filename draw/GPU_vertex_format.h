@@ -35,25 +35,6 @@ typedef struct GPUPackedNormal {
 #define SIGNED_INT_10_MAX 511
 #define SIGNED_INT_10_MIN -512
 
-// The new SSE based quantize code is technically more accurate since rounding is done
-// at the very end, instead of at the beginning...
-BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3_sse(const xmmvecf data)
-{
-  __m128 min = _mm_set1_ps(SIGNED_INT_10_MIN);
-  __m128 max = _mm_set1_ps(SIGNED_INT_10_MAX);
-  __m128 result = _mm_min_ps(_mm_max_ps(_mm_mul_ps(data.m128, max), min), max);
-
-  xmmveci result_i;
-  result_i.m128 = _mm_cvtps_epi32(result);
-
-  GPUPackedNormal n = {
-      result_i.x,
-      result_i.y,
-      result_i.z,
-  };
-  return n;
-}
-
 BLI_INLINE int clampi(int x, int min_allowed, int max_allowed)
 {
 #if TRUST_NO_ONE
@@ -84,4 +65,27 @@ BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3(const float data[3])
       gpu_convert_normalized_f32_to_i10(data[2]),
   };
   return n;
+}
+
+// The new SSE based quantize code is technically more accurate since rounding is done
+// at the very end, instead of at the beginning...
+BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3_sse(const xmmvecf data)
+{
+  const xmmvecf min = load_xmmvecf_f1(SIGNED_INT_10_MIN);
+  const xmmvecf max = load_xmmvecf_f1(SIGNED_INT_10_MAX);
+  __m128 clamped = _mm_min_ps(_mm_max_ps(_mm_mul_ps(data.m128, max.m128), min.m128), max.m128);
+
+  xmmveci result_i;
+  result_i.m128 = _mm_cvtps_epi32(clamped);
+
+  return {
+      result_i.x,
+      result_i.y,
+      result_i.z,
+  };
+}
+
+BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3_internalsse(const float data[3])
+{
+  return GPU_normal_convert_i10_v3_sse(load_xmmvecf_f3(data));
 }

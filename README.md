@@ -57,10 +57,11 @@ Command: `blender_bench.exe --benchmark_report_aggregates_only=true --benchmark_
 
 | Test        | i7-8750H Time | Xeon E5-1650 v4 Time | Notes |
 | ------------| ------------- | ----------------- | ----- |
-| BB_dot_v3v3_mean | 121 ns (1x) | 148 ns (1x) | Baseline |
-| BB_dot_v3v3_sse_lf3_mean | 133 ns (0.91x) | 147 ns (1.01x) | Bad |
-| BB_dot_v3v3_sse_lf4_mean | 108 ns (1.12x) | 128 ns (1.16x) | Good |
-| BB_dot_v3v3_sse_lxmm_mean | 107 ns (1.13x) | 125 ns (1.19x) | Best |
+| BB_dot_v3v3_mean | 121 ns (1x) | 152 ns (1x) | Baseline |
+| BB_dot_v3v3_internalsse_mean | 131 ns (0.91x) | 152 ns (1x) | Bad |
+| BB_dot_v3v3_sse_lf3_mean | 131 ns (0.91x) | 160 ns (0.95x) | Bad |
+| BB_dot_v3v3_sse_lf4_mean | 109 ns (1.09x) | 130 ns (1.17x) | Good |
+| BB_dot_v3v3_sse_lxmm_mean | 109 ns (1.09x) | 127 ns (1.20x) | Best |
 | | | | |
 | BB_cross_tri_v3_mean | 178 ns (1x) | 201 ns (1x) | Baseline |
 | BB_cross_tri_v3_internalsse_mean | 158 ns (1.12x) | 183 ns (1.1x) | Good |
@@ -82,15 +83,16 @@ Command: `blender_bench.exe --benchmark_report_aggregates_only=true --benchmark_
 | BB_is_quad_flip_v3_sse_lf4_mean | 117 ns (1.32x) | 146 ns (1.37x) | Good |
 | BB_is_quad_flip_v3_sse_lxmm_mean | 116 ns (1.34x) | 144 ns (1.39x) | Best |
 | | | | |
-| BB_GPU_normal_convert_i10_v3_mean | 142 ns (1x) | 158 ns (1x) | Baseline |
-| BB_GPU_normal_convert_i10_v3_sse_lf3_mean | 141 ns (1.01x) | 142 ns (1.11x) | Ok |
-| BB_GPU_normal_convert_i10_v3_sse_lf4_mean | 130 ns (1.09x) | 140 ns (1.13x) | Good |
-| BB_GPU_normal_convert_i10_v3_sse_lxmm_mean | 128 ns (1.11x) | 137 ns (1.15x) | Best |
+| BB_GPU_normal_convert_i10_v3_mean | 142 ns (1x) | 159 ns (1x) | Baseline |
+| BB_GPU_normal_convert_i10_v3_internalsse_mean | 141 ns (1.01x) | 142 ns (1.12x) | Ok |
+| BB_GPU_normal_convert_i10_v3_sse_lf3_mean | 141 ns (1.01x) | 150 ns (1.06x) | Ok |
+| BB_GPU_normal_convert_i10_v3_sse_lf4_mean | 130 ns (1.09x) | 140 ns (1.14x) | Good |
+| BB_GPU_normal_convert_i10_v3_sse_lxmm_mean | 128 ns (1.11x) | 135 ns (1.18x) | Best |
 
 
 ## Summary
 ### Odd results
-The *_internalsse variations above should not be any faster/slower than the *_lf3sf3 variants.  However, this is not the case; they are substantially faster in some cases.
+The *_internalsse variations above should not be any faster/slower than the *_lf3sf3 variants.  However, this is not the case; they are substantially faster in some cases.  It's surprising that even Clang shows codegen differences between the 2 variants.
 
 This would allow for quick integration back into the main Blender codebase as all the callers would not notice. The functions would just get faster; for "free".
 
@@ -111,7 +113,7 @@ Functions with three or more blocks of mathematical operations would stand to ga
 ### Blender's vector storage format
 The current scorecard speaks for itself:  The usage of 3 floats in the APIs, DNA structs,and RNA interfaces is suboptimal when compared against either 4 floats or the usage of SSE types directly. This should not come as a surprise.
 
-  * Performance is affected so much due to this that, in some simple cases, SSE becomes slower than normal code.
+  * Performance is affected so much due to this that, in some simple cases, SSE becomes slower than normal code (dot product especially).
   * To fully leverage SSE, the usage of SSE types would be ideal, followed closely by 4 float storage.
   * SoA, data-oriented, designs in theory can be used for further speedups. However, those designs often run counter to the access patterns that Blender needs (e.g. during editing).
 

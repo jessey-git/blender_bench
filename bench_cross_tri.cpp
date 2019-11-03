@@ -28,7 +28,7 @@ static void BB_cross_tri_v3(benchmark::State &state)
 }
 
 //
-// Variant: cross_tri_v3_internalsse: implemented in terms of cross_tri_v3_sse
+// Variant: cross_tri_v3: implemented in terms of cross_tri_v3_sse
 //
 static void BB_cross_tri_v3_internalsse(benchmark::State &state)
 {
