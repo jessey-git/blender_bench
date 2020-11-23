@@ -69,23 +69,20 @@ BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3(const float data[3])
 
 // The new SSE based quantize code is technically more accurate since rounding is done
 // at the very end, instead of at the beginning...
-BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3_sse(const xmmvecf data)
+BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_m128(const __m128 data)
 {
-  const xmmvecf min = load_xmmvecf_f1(SIGNED_INT_10_MIN);
-  const xmmvecf max = load_xmmvecf_f1(SIGNED_INT_10_MAX);
-  __m128 clamped = _mm_min_ps(_mm_max_ps(_mm_mul_ps(data.m128, max.m128), min.m128), max.m128);
+  const __m128 min = load_m128_f1(SIGNED_INT_10_MIN);
+  const __m128 max = load_m128_f1(SIGNED_INT_10_MAX);
+  __m128 clamped = _mm_min_ps(_mm_max_ps(_mm_mul_ps(data, max), min), max);
 
-  xmmveci result_i;
-  result_i.m128 = _mm_cvtps_epi32(clamped);
+  __m128i result_i;
+  result_i = _mm_cvtps_epi32(clamped);
 
-  return {
-      result_i.x,
-      result_i.y,
-      result_i.z,
-  };
+  int *i = (int *)&result_i;
+  return {i[0], i[1], i[2]};
 }
 
-BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3_internalsse(const float data[3])
+BLI_INLINE GPUPackedNormal GPU_normal_convert_i10_v3_pass(const float data[3])
 {
-  return GPU_normal_convert_i10_v3_sse(load_xmmvecf_f3(data));
+  return GPU_normal_convert_i10_m128(load_m128_f3(data));
 }

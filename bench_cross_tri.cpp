@@ -1,4 +1,4 @@
-// Copyright(c) 2019 Jesse Yurkovich
+// Copyright(c) 2019-2020 Jesse Yurkovich
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include <benchmark/benchmark.h>
@@ -28,9 +28,9 @@ static void BB_cross_tri_v3(benchmark::State &state)
 }
 
 //
-// Variant: cross_tri_v3: implemented in terms of cross_tri_v3_sse
+// Hybrid: cross_tri_v3: pass-through to cross_tri_m128
 //
-static void BB_cross_tri_v3_internalsse(benchmark::State &state)
+static void BB_cross_tri_v3_pass(benchmark::State &state)
 {
   const float(*verts)[3] = geo_quadsphere1_f3_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -39,7 +39,7 @@ static void BB_cross_tri_v3_internalsse(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float n[3];
 
-      cross_tri_v3_internalsse(n, verts[tris[i][0]], verts[tris[i][1]], verts[tris[i][2]]);
+      cross_tri_v3_pass(n, verts[tris[i][0]], verts[tris[i][1]], verts[tris[i][2]]);
 
       benchmark::DoNotOptimize(n);
     }
@@ -47,9 +47,9 @@ static void BB_cross_tri_v3_internalsse(benchmark::State &state)
 }
 
 //
-// SSE Variant: cross_tri_v3 sse: load from f3, store to f3
+// Hybrid: cross_tri_v3: re-implemented as cross_tri_m128
 //
-static void BB_cross_tri_v3_sse_lf3sf3(benchmark::State &state)
+static void BB_cross_tri_v3_sse(benchmark::State &state)
 {
   const float(*verts)[3] = geo_quadsphere1_f3_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -58,22 +58,41 @@ static void BB_cross_tri_v3_sse_lf3sf3(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float n[3];
 
-      xmmvecf temp;
-      cross_tri_v3_sse(&temp,
-                        load_xmmvecf_f3(verts[tris[i][0]]),
-                        load_xmmvecf_f3(verts[tris[i][1]]),
-                        load_xmmvecf_f3(verts[tris[i][2]]));
+      cross_tri_v3_sse(n, verts[tris[i][0]], verts[tris[i][1]], verts[tris[i][2]]);
 
-      store_f3_xmmvecf(n, temp);
       benchmark::DoNotOptimize(n);
     }
   }
 }
 
 //
-// SSE Variant: cross_tri_v3 sse: load from f3, store to f4
+// SSE Variant: cross_tri_m128: load from f3, store to f3
 //
-static void BB_cross_tri_v3_sse_lf3sf4(benchmark::State &state)
+static void BB_cross_tri_m128_lf3sf3(benchmark::State &state)
+{
+  const float(*verts)[3] = geo_quadsphere1_f3_verts;
+  const int(*tris)[3] = geo_quadspehere1_indices;
+
+  for (auto _ : state) {
+    for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
+      float n[3];
+
+      __m128 temp;
+      cross_tri_m128(&temp,
+                     load_m128_f3(verts[tris[i][0]]),
+                     load_m128_f3(verts[tris[i][1]]),
+                     load_m128_f3(verts[tris[i][2]]));
+
+      store_f3_m128(n, temp);
+      benchmark::DoNotOptimize(n);
+    }
+  }
+}
+
+//
+// SSE Variant: cross_tri_m128: load from f3, store to f4
+//
+static void BB_cross_tri_m128_lf3sf4(benchmark::State &state)
 {
   const float(*verts)[3] = geo_quadsphere1_f3_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -82,22 +101,22 @@ static void BB_cross_tri_v3_sse_lf3sf4(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float n[4];
 
-      xmmvecf temp;
-      cross_tri_v3_sse(&temp,
-                        load_xmmvecf_f3(verts[tris[i][0]]),
-                        load_xmmvecf_f3(verts[tris[i][1]]),
-                        load_xmmvecf_f3(verts[tris[i][2]]));
+      __m128 temp;
+      cross_tri_m128(&temp,
+                     load_m128_f3(verts[tris[i][0]]),
+                     load_m128_f3(verts[tris[i][1]]),
+                     load_m128_f3(verts[tris[i][2]]));
 
-      store_f4_xmmvecf(n, temp);
+      store_f4_m128(n, temp);
       benchmark::DoNotOptimize(n);
     }
   }
 }
 
 //
-// SSE Variant: cross_tri_v3 sse: load from f4, store to f4
+// SSE Variant: cross_tri_m128: load from f4, store to f4
 //
-static void BB_cross_tri_v3_sse_lf4sf4(benchmark::State &state)
+static void BB_cross_tri_m128_lf4sf4(benchmark::State &state)
 {
   const float(*verts)[4] = geo_quadsphere1_f4_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -106,38 +125,38 @@ static void BB_cross_tri_v3_sse_lf4sf4(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float n[4];
 
-      xmmvecf temp;
-      cross_tri_v3_sse(&temp,
-                        load_xmmvecf_f4(verts[tris[i][0]]),
-                        load_xmmvecf_f4(verts[tris[i][1]]),
-                        load_xmmvecf_f4(verts[tris[i][2]]));
+      __m128 temp;
+      cross_tri_m128(&temp,
+                     load_m128_f4(verts[tris[i][0]]),
+                     load_m128_f4(verts[tris[i][1]]),
+                     load_m128_f4(verts[tris[i][2]]));
 
-      store_f4_xmmvecf(n, temp);
+      store_f4_m128(n, temp);
       benchmark::DoNotOptimize(n);
     }
   }
 }
 
 //
-// SSE Speed-of-light: cross_tri_v3 sse: load from xmm, store to xmm
+// SSE Speed-of-light: cross_tri_m128 native: load from native, store to native
 //
-static void BB_cross_tri_v3_sse_lxmmsxmm(benchmark::State &state)
+static void BB_cross_tri_m128_native(benchmark::State &state)
 {
   const float(*verts)[4] = geo_quadsphere1_f4_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
 
-  // Setup: simulate xmmvecfs already being available (not in hot path)...
-  xmmvecf xmmverts[26];
+  // Setup: simulate __m128s already being available (not in hot path)...
+  __m128 xmmverts[26];
   for (int i = 0; i < geo_quadsphehere1_numverts; i++) {
-    xmmverts[i] = load_xmmvecf_f4(verts[i]);
+    xmmverts[i] = load_m128_f4(verts[i]);
   }
 
   // Benchmark
   for (auto _ : state) {
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
-      xmmvecf n;
+      __m128 n;
 
-      cross_tri_v3_sse(&n, xmmverts[tris[i][0]], xmmverts[tris[i][1]], xmmverts[tris[i][2]]);
+      cross_tri_m128(&n, xmmverts[tris[i][0]], xmmverts[tris[i][1]], xmmverts[tris[i][2]]);
 
       benchmark::DoNotOptimize(n);
     }
@@ -145,8 +164,9 @@ static void BB_cross_tri_v3_sse_lxmmsxmm(benchmark::State &state)
 }
 
 BENCHMARK(BB_cross_tri_v3);
-BENCHMARK(BB_cross_tri_v3_internalsse);
-BENCHMARK(BB_cross_tri_v3_sse_lf3sf3);
-BENCHMARK(BB_cross_tri_v3_sse_lf3sf4);
-BENCHMARK(BB_cross_tri_v3_sse_lf4sf4);
-BENCHMARK(BB_cross_tri_v3_sse_lxmmsxmm);
+BENCHMARK(BB_cross_tri_v3_pass);
+BENCHMARK(BB_cross_tri_v3_sse);
+BENCHMARK(BB_cross_tri_m128_lf3sf3);
+BENCHMARK(BB_cross_tri_m128_lf3sf4);
+BENCHMARK(BB_cross_tri_m128_lf4sf4);
+BENCHMARK(BB_cross_tri_m128_native);

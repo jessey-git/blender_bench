@@ -30,84 +30,25 @@ extern "C" {
 #include <xmmintrin.h>
 #include <smmintrin.h>
 
-typedef struct ATTR_ALIGN(16) xmmvecf {
-  union {
-    __m128 m128;
-    struct {
-      float x, y, z, w;
-    };
-  };
-} xmmvecf;
-
-typedef struct ATTR_ALIGN(16) xmmveci {
-  union {
-    __m128i m128;
-    struct {
-      int x, y, z, w;
-    };
-  };
-} xmmveci;
-
-MINLINE xmmvecf load_xmmvecf_f1(float f)
-{
-  xmmvecf r;
-  r.m128 = _mm_set1_ps(f);
-  return r;
-}
-
-MINLINE xmmvecf load_xmmvecf_f3(const float v[3])
-{
-  xmmvecf r;
-  r.m128 = _mm_setr_ps(v[0], v[1], v[2], 0);
-  return r;
-}
-
-MINLINE xmmvecf load_xmmvecf_f4(const float v[4])
-{
-  xmmvecf r;
-  r.m128 = _mm_loadu_ps(v);
-  return r;
-}
-
-MINLINE void store_f3_xmmvecf(float r[3], const xmmvecf a)
-{
-  r[0] = a.x;
-  r[1] = a.y;
-  r[2] = a.z;
-}
-
-MINLINE void store_f4_xmmvecf(float r[4], const xmmvecf a)
-{
-  _mm_store_ps(r, a.m128);
-}
-
-MINLINE void zero_v3_sse(xmmvecf *r);
-MINLINE void copy_v3_v3_sse(xmmvecf *r, const xmmvecf a);
-MINLINE void sub_v3_v3v3_sse(xmmvecf *r, const xmmvecf a, const xmmvecf b);
-MINLINE void sub_v3_v3_sse(xmmvecf *r, const xmmvecf a);
-MINLINE void mul_v3_v3fl_sse(xmmvecf *r, const xmmvecf a, const float f);
-MINLINE void madd_v3_v3fl_sse(xmmvecf *r, const xmmvecf a, const float f);
-MINLINE float dot_v3v3_sse(const xmmvecf a, const xmmvecf b);
-MINLINE void cross_v3_v3v3_sse(xmmvecf *r, const xmmvecf a, const xmmvecf b);
-MINLINE float normalize_v3_v3_sse(xmmvecf *r, const xmmvecf a);
-MINLINE float normalize_v3_sse(xmmvecf *n);
-MINLINE void normal_short_to_float_v3_sse(xmmvecf *out, const short in[3]);
-
-MINLINE float dot_v3v3_internalsse(const float a[3], const float b[3]);
-
 /* -------------------------------------- */
+
+MINLINE void zero_v3(float r[3]);
 
 MINLINE void copy_v2_v2(float r[2], const float a[2]);
 MINLINE void copy_v3_v3(float r[3], const float a[3]);
+
+MINLINE void add_v3_v3(float r[3], const float a[3]);
 
 MINLINE void sub_v2_v2(float r[2], const float a[2]);
 MINLINE void sub_v2_v2v2(float r[2], const float a[2], const float b[2]);
 MINLINE void sub_v3_v3(float r[3], const float a[3]);
 MINLINE void sub_v3_v3v3(float r[3], const float a[3], const float b[3]);
 
-MINLINE void zero_v3(float r[3]);
-
+MINLINE void mul_v3_fl(float r[3], float f);
 MINLINE void mul_v3_v3fl(float r[3], const float a[3], float f);
+
+MINLINE void madd_v3_v3fl(float r[3], const float a[3], float f);
+MINLINE void madd_v3_v3v3fl(float r[3], const float a[3], const float b[3], float f);
 
 MINLINE float dot_v3v3(const float a[3], const float b[3]);
 
@@ -117,10 +58,47 @@ MINLINE float normalize_v3_v3_length(float r[3], const float a[3], const float u
 MINLINE float normalize_v3_v3(float r[3], const float a[3]);
 MINLINE float normalize_v3(float n[3]);
 
-#if BLI_MATH_DO_INLINE
-#  include "math_vector_inline.c"
+/* -------------------------------------- */
+#if 1
+#  define VECTORCALL _vectorcall
+#else
+#  define VECTORCALL
 #endif
 
-#ifdef __cplusplus
+MINLINE __m128 VECTORCALL load_m128_f1(const float f);
+MINLINE __m128 VECTORCALL load_m128_f3(const float v[3]);
+MINLINE __m128 VECTORCALL load_m128_f4(const float v[4]);
+MINLINE void VECTORCALL store_f3_m128(float r[3], const __m128 a);
+MINLINE void VECTORCALL store_f4_m128(float r[4], const __m128 a);
+
+MINLINE void VECTORCALL zero_m128(__m128 *r);
+
+MINLINE void VECTORCALL add_m128_m128(__m128 *r, const __m128 a);
+
+MINLINE void VECTORCALL sub_m128_m128m128(__m128 *r, const __m128 a, const __m128 b);
+MINLINE void VECTORCALL sub_m128_m128(__m128 *r, const __m128 a);
+
+MINLINE void VECTORCALL mul_m128_fl(__m128 *r, const float f);
+MINLINE void VECTORCALL mul_m128_m128fl(__m128 *r, const __m128 a, const float f);
+
+MINLINE void VECTORCALL madd_m128_m128fl(__m128 *r, const __m128 a, const float f);
+MINLINE void VECTORCALL madd_m128_m128m128fl(__m128 *r, const __m128 a, const __m128 b, float f);
+
+MINLINE float VECTORCALL dot_m128m128(const __m128 a, const __m128 b);
+
+MINLINE void VECTORCALL cross_m128_m128m128(__m128 *r, const __m128 a, const __m128 b);
+
+MINLINE float VECTORCALL normalize_m128_m128(__m128 *r, const __m128 a);
+MINLINE float VECTORCALL normalize_m128(__m128 *n);
+
+MINLINE void VECTORCALL add_newell_cross_m128_m128m128(__m128 *n,
+                                                       const __m128 v_prev,
+                                                       const __m128 v_curr);
+
+#  if BLI_MATH_DO_INLINE
+#    include "math_vector_inline.c"
+#  endif
+
+#  ifdef __cplusplus
 }
-#endif
+#  endif

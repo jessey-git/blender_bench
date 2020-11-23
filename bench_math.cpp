@@ -1,4 +1,4 @@
-// Copyright(c) 2019 Jesse Yurkovich
+// Copyright(c) 2019-2020 Jesse Yurkovich
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include <benchmark/benchmark.h>
@@ -28,9 +28,9 @@ static void BB_dot_v3v3(benchmark::State &state)
 }
 
 //
-// Variant: dot_v3v3: implemented in terms of dot_v3v3_sse
+// Variant: dot_v3v3: implemented in terms of dot_m128m128
 //
-static void BB_dot_v3v3_internalsse(benchmark::State &state)
+static void BB_dot_v3v3_pass(benchmark::State &state)
 {
   const float(*verts)[3] = geo_quadsphere1_f3_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -39,8 +39,8 @@ static void BB_dot_v3v3_internalsse(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float d;
 
-      d = dot_v3v3_internalsse(verts[tris[i][0]], verts[tris[i][1]]);
-      d += dot_v3v3_internalsse(verts[tris[i][1]], verts[tris[i][2]]);
+      d = dot_v3v3_pass(verts[tris[i][0]], verts[tris[i][1]]);
+      d += dot_v3v3_pass(verts[tris[i][1]], verts[tris[i][2]]);
 
       benchmark::DoNotOptimize(d);
     }
@@ -48,9 +48,9 @@ static void BB_dot_v3v3_internalsse(benchmark::State &state)
 }
 
 //
-// SSE Variant: dot_v3v3 sse: load from f3
+// SSE Variant: dot_m128m128 load from f3
 //
-static void BB_dot_v3v3_sse_lf3(benchmark::State &state)
+static void BB_dot_m128m128_lf3(benchmark::State &state)
 {
   const float(*verts)[3] = geo_quadsphere1_f3_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -59,8 +59,8 @@ static void BB_dot_v3v3_sse_lf3(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float d;
 
-      d = dot_v3v3_sse(load_xmmvecf_f3(verts[tris[i][0]]), load_xmmvecf_f3(verts[tris[i][1]]));
-      d += dot_v3v3_sse(load_xmmvecf_f3(verts[tris[i][1]]), load_xmmvecf_f3(verts[tris[i][2]]));
+      d = dot_m128m128(load_m128_f3(verts[tris[i][0]]), load_m128_f3(verts[tris[i][1]]));
+      d += dot_m128m128(load_m128_f3(verts[tris[i][1]]), load_m128_f3(verts[tris[i][2]]));
 
       benchmark::DoNotOptimize(d);
     }
@@ -68,9 +68,9 @@ static void BB_dot_v3v3_sse_lf3(benchmark::State &state)
 }
 
 //
-// SSE Variant: dot_v3v3 sse: load from f4
+// SSE Variant: dot_m128m128 load from f4
 //
-static void BB_dot_v3v3_sse_lf4(benchmark::State &state)
+static void BB_dot_m128m128_lf4(benchmark::State &state)
 {
   const float(*verts)[4] = geo_quadsphere1_f4_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
@@ -79,8 +79,8 @@ static void BB_dot_v3v3_sse_lf4(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float d;
 
-      d = dot_v3v3_sse(load_xmmvecf_f4(verts[tris[i][0]]), load_xmmvecf_f4(verts[tris[i][1]]));
-      d += dot_v3v3_sse(load_xmmvecf_f4(verts[tris[i][1]]), load_xmmvecf_f4(verts[tris[i][2]]));
+      d = dot_m128m128(load_m128_f4(verts[tris[i][0]]), load_m128_f4(verts[tris[i][1]]));
+      d += dot_m128m128(load_m128_f4(verts[tris[i][1]]), load_m128_f4(verts[tris[i][2]]));
 
       benchmark::DoNotOptimize(d);
     }
@@ -88,17 +88,17 @@ static void BB_dot_v3v3_sse_lf4(benchmark::State &state)
 }
 
 //
-// SSE Speed-of-light: dot_v3v3 sse: load from xmm
+// SSE Speed-of-light: dot_v3v3 load from native
 //
-static void BB_dot_v3v3_sse_lxmm(benchmark::State &state)
+static void BB_dot_m128m128_native(benchmark::State &state)
 {
   const float(*verts)[4] = geo_quadsphere1_f4_verts;
   const int(*tris)[3] = geo_quadspehere1_indices;
 
-  // Setup: simulate xmmvecfs already being available (not in hot path)...
-  xmmvecf xmmverts[26];
+  // Setup: simulate __m128s already being available (not in hot path)...
+  __m128 xmmverts[26];
   for (int i = 0; i < geo_quadsphehere1_numverts; i++) {
-    xmmverts[i] = load_xmmvecf_f4(verts[i]);
+    xmmverts[i] = load_m128_f4(verts[i]);
   }
 
   // Benchmark
@@ -106,8 +106,8 @@ static void BB_dot_v3v3_sse_lxmm(benchmark::State &state)
     for (int i = 0; i < geo_quadsphehere1_numtris; i++) {
       float d;
 
-      d = dot_v3v3_sse(xmmverts[tris[i][0]], xmmverts[tris[i][1]]);
-      d += dot_v3v3_sse(xmmverts[tris[i][1]], xmmverts[tris[i][2]]);
+      d = dot_m128m128(xmmverts[tris[i][0]], xmmverts[tris[i][1]]);
+      d += dot_m128m128(xmmverts[tris[i][1]], xmmverts[tris[i][2]]);
 
       benchmark::DoNotOptimize(d);
     }
@@ -115,7 +115,7 @@ static void BB_dot_v3v3_sse_lxmm(benchmark::State &state)
 }
 
 BENCHMARK(BB_dot_v3v3);
-BENCHMARK(BB_dot_v3v3_internalsse);
-BENCHMARK(BB_dot_v3v3_sse_lf3);
-BENCHMARK(BB_dot_v3v3_sse_lf4);
-BENCHMARK(BB_dot_v3v3_sse_lxmm);
+BENCHMARK(BB_dot_v3v3_pass);
+BENCHMARK(BB_dot_m128m128_lf3);
+BENCHMARK(BB_dot_m128m128_lf4);
+BENCHMARK(BB_dot_m128m128_native);

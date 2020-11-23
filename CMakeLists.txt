@@ -13,8 +13,11 @@ endif()
 set(SRC
 	"bench_cross_tri.cpp"
 	"bench_is_quad_flip.cpp"
+	"bench_geom.cpp"
 	"bench_math.cpp"
+	"bench_matrix.cpp"
 	"bench_normal_tri.cpp"
+	"bench_simulation.cpp"
 	"bench_quantize.cpp"
 )
 

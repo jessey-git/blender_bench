@@ -1,4 +1,4 @@
-// Copyright(c) 2019 Jesse Yurkovich
+// Copyright(c) 2019-2020 Jesse Yurkovich
 // SPDX-License-Identifier: GPL-3.0-only
 
 #pragma once
@@ -21,7 +21,7 @@ union Float_t {
   float f;
 };
 
-bool AlmostEqualUlpsAndAbs(float A, float B)
+static bool AlmostEqualUlpsAndAbs(float A, float B)
 {
   // Check if the numbers are really close
   // Needed when comparing numbers near zero.
